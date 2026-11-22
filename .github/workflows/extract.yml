@@ -1,34 +1,43 @@
 
-name: Build DIMENSIONS APK
+name: Inspect DIMENSIONS Android build
 
 on:
+  push:
+    paths:
+      - ".github/workflows/extract.yml"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  build:
+  inspect:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download project
+      - name: Checkout project
         uses: actions/checkout@v4
 
-      - name: Check project files
-        run: |
-          ls -la
-          find . -maxdepth 3 -type f | head -200
-
-      - name: Check ZIP file
+      - name: Extract ZIP
         run: |
           unzip -t dimensions_-the-nightmare-beyond-reality.zip
-
-      - name: Extract project
-        run: |
           mkdir -p extracted-project
-          unzip -o dimensions_-the-nightmare-beyond-reality.zip -d extracted-project
+          unzip -q dimensions_-the-nightmare-beyond-reality.zip -d extracted-project
 
-      - name: Show Android build files
+      - name: Read Android build instructions
         run: |
-          find extracted-project -type f \( -name "gradlew" -o -name "build.gradle" -o -name "build.gradle.kts" -o -name "settings.gradle" -o -name "settings.gradle.kts" \)
+          echo "===== APK README ====="
+          cat extracted-project/android-apk/README-APK.md
+
+          echo "===== BUILD SCRIPT ====="
+          sed -n '1,240p' extracted-project/android-apk/build-apk.sh
+
+          echo "===== PACKAGE CONFIGURATION ====="
+          cat extracted-project/package.json
+
+          echo "===== CAPACITOR CONFIGURATION ====="
+          cat extracted-project/android-apk/capacitor.config.json
+
+          echo "===== INTERNAL BUILD WORKFLOW ====="
+          sed -n '1,260p' extracted-project/.github/workflows/build-android-apk.yml
+          
